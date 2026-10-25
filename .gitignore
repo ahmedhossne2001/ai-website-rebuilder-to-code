@@ -24,3 +24,15 @@ frontend/.env.local
 
 # Walkthrough demo videos
 walkthrough/
+
+# Local secrets and provider credentials (all platforms)
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+.env.*
+!.env.example
+*.pem
+*.key
