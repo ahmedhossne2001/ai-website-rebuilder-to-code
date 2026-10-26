@@ -335,6 +335,9 @@ class ParameterExtractionStage:
         if test_mode and test_model not in ("openai", "anthropic", "gemini"):
             await self.throw_error("Invalid test model selection.")
             raise ValueError("Invalid test model")
+        if test_mode and validated_input_mode == "video" and test_model != "gemini":
+            await self.throw_error("Video input in Test Mode requires Gemini.")
+            raise ValueError("Video Test Mode requires Gemini")
 
         # Extract and validate generation type
         generation_type = params.get("generationType", "create")
