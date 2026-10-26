@@ -177,6 +177,36 @@ async def analyze_url(body: AnalyzeRequest):
             if not captured_full_page and details["documentHeight"] > viewport["height"]:
                 warnings.append("Screenshot shows the first viewport only; more content exists below.")
             screenshot = await page.screenshot(type="png", full_page=captured_full_page, timeout=15000)
+            tiles = []
+            if body.fullPage and not captured_full_page:
+                # Bounded sectional capture: preserve the original viewport image and
+                # collect additional screenshots without producing a huge bitmap.
+                # A tile never exceeds the viewport resolution. No scrolling scripts
+                # from the target website are executed (page JS remains disabled).
+                total_height = min(int(details["documentHeight"]), 20_000)
+                step = viewport["height"]
+                positions = list(range(step, total_height, step))
+                if positions:
+                    # Sample up to 3 additional positions across long documents.
+                    if len(positions) > 3:
+                        indices = [0, len(positions) // 2, len(positions) - 1]
+                        positions = [positions[i] for i in sorted(set(indices))]
+                    for y in positions:
+                        await page.evaluate("(y) => window.scrollTo(0, y)", y)
+                        await page.wait_for_timeout(180)
+                        tile = await page.screenshot(type="png", full_page=False, timeout=12000)
+                        if len(tile) > 2_500_000:
+                            warnings.append("A lower-page section was skipped because its image exceeded the per-tile size limit.")
+                            continue
+                        tiles.append({
+                            "y": y,
+                            "image": "data:image/png;base64," + base64.b64encode(tile).decode(),
+                        })
+                    if tiles:
+                        warnings.append(f"Long page: captured first viewport plus {len(tiles)} additional section(s), not a continuous full-page image.")
+                    else:
+                        warnings.append("Long page: additional section capture was not possible within safety limits.")
+                    await page.evaluate("() => window.scrollTo(0, 0)")
             if len(screenshot) > 5_000_000:
                 raise ValueError("Screenshot is too large.")
             await browser.close()
@@ -185,6 +215,7 @@ async def analyze_url(body: AnalyzeRequest):
             "device": body.device,
             "viewport": viewport,
             "capturedFullPage": captured_full_page,
+            "sectionsCaptured": tiles,
             "screenshot": "data:image/png;base64," + base64.b64encode(screenshot).decode(),
             "design": details,
             "warnings": warnings,
