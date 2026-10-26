@@ -26,3 +26,21 @@ async def test_invalid_device_is_rejected_before_browser():
     with pytest.raises(HTTPException) as error:
         await analyze_url(AnalyzeRequest(url="https://example.com", device="tablet"))
     assert error.value.status_code == 422
+
+
+@pytest.mark.parametrize("url", [
+    "https://www.alhashmyahh.com/",
+    "https://alhashmyahh.com/",
+])
+def test_approved_owned_website(url, monkeypatch):
+    monkeypatch.setenv(
+        "ANALYZER_ALLOWED_HOSTS",
+        "example.com,www.alhashmyahh.com,alhashmyahh.com",
+    )
+    assert verify_url(url) == url
+
+
+def test_owned_site_is_not_allowed_without_explicit_config(monkeypatch):
+    monkeypatch.delenv("ANALYZER_ALLOWED_HOSTS", raising=False)
+    with pytest.raises(ValueError):
+        verify_url("https://www.alhashmyahh.com/")
