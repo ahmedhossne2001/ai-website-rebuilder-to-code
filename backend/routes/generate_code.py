@@ -255,6 +255,8 @@ class ExtractedParams:
     stack: Stack
     input_mode: InputMode
     should_generate_images: bool
+    test_mode: bool
+    test_model: str
     openai_api_key: str | None
     anthropic_api_key: str | None
     gemini_api_key: str | None
@@ -328,6 +330,12 @@ class ParameterExtractionStage:
         should_generate_images = bool(params.get("isImageGenerationEnabled", True))
         should_extract_assets = bool(params.get("isAssetExtractionEnabled", True))
 
+        test_mode = params.get("testMode") is True
+        test_model = params.get("testModel", "openai")
+        if test_mode and test_model not in ("openai", "anthropic", "gemini"):
+            await self.throw_error("Invalid test model selection.")
+            raise ValueError("Invalid test model")
+
         # Extract and validate generation type
         generation_type = params.get("generationType", "create")
         if generation_type not in ["create", "update"]:
@@ -377,6 +385,8 @@ class ParameterExtractionStage:
             stack=validated_stack,
             input_mode=validated_input_mode,
             should_generate_images=should_generate_images,
+            test_mode=test_mode,
+            test_model=test_model,
             should_extract_assets=should_extract_assets,
             openai_api_key=openai_api_key,
             anthropic_api_key=anthropic_api_key,
@@ -421,9 +431,26 @@ class ModelSelectionStage:
         openai_api_key: str | None,
         anthropic_api_key: str | None,
         gemini_api_key: str | None = None,
+        test_mode: bool = False,
+        test_model: str = "openai",
     ) -> List[Llm]:
         """Select appropriate models based on available API keys"""
         try:
+            if test_mode:
+                chosen = {
+                    "openai": (Llm.GPT_5_4_MINI_LOW, openai_api_key),
+                    "anthropic": (Llm.CLAUDE_SONNET_4_6, anthropic_api_key),
+                    "gemini": (Llm.GEMINI_3_FLASH_PREVIEW_MINIMAL, gemini_api_key),
+                }.get(test_model)
+                if chosen is None:
+                    await self.throw_error("Unknown Test Mode model selection.")
+                    return []
+                model, key = chosen
+                if not key:
+                    await self.throw_error(f"Test Mode requires a configured {test_model} API key.")
+                    return []
+                print(f"Test Mode: one generation using {model.value}", flush=True)
+                return [model]
             num_variants = 2 if generation_type == "update" else NUM_VARIANTS
             variant_models = self._get_variant_models(
                 generation_type,
@@ -772,7 +799,8 @@ class StatusBroadcastMiddleware(Middleware):
         is_video_mode = context.extracted_params.input_mode == "video"
         is_update = context.extracted_params.generation_type == "update"
         num_variants = (
-            NUM_VARIANTS_VIDEO if is_video_mode else 2 if is_update else NUM_VARIANTS
+            1 if context.extracted_params.test_mode
+            else NUM_VARIANTS_VIDEO if is_video_mode else 2 if is_update else NUM_VARIANTS
         )
 
         # Tell frontend how many variants we're using
@@ -815,6 +843,8 @@ class CodeGenerationMiddleware(Middleware):
                 openai_api_key=context.extracted_params.openai_api_key,
                 anthropic_api_key=context.extracted_params.anthropic_api_key,
                 gemini_api_key=context.extracted_params.gemini_api_key,
+                test_mode=context.extracted_params.test_mode,
+                test_model=context.extracted_params.test_model,
             )
             if IS_DEBUG_ENABLED:
                 await context.send_message(
