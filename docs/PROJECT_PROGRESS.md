@@ -92,3 +92,11 @@ Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `do
 - UI labels the actual capture mode and continues to keep **Analyze URL (no AI)** separate from paid generation.
 - Commits: `3189a8c` (backend), `cc5dea1` (frontend). **Not yet rebuilt or verified on the user's Mac/Windows**. Continue to treat existing SSRF/network isolation restrictions as incomplete for public exposure.
 - Acceptance: rebuild Docker; analyze owned home page with Full Page selected; verify more sections visible or warning/fallback; repeat Desktop/Mobile and first-viewport capture without AI calls.
+
+## 2026-10-26 — Full-page limit verified; bounded sectional capture implemented
+
+- **User-confirmed Mac result:** `https://www.alhashmyahh.com` with Full Page (bounded) selected returned **First viewport captured** and warnings that the site exceeds the 4500px/6MP budget. This is the intended fallback, not a crash.
+- **Response:** added bounded sectional capture (first viewport + up to three scroll-position screenshots when full-page capture exceeds limits) and a frontend gallery for additional captured sections. No Claude calls in analysis.
+- **Commits:** `d3afe2b` backend, `8926e79` frontend; docs `docs/SECTIONAL_CAPTURE.md`.
+- **Limitations:** partial coverage rather than one stitched image; JS remains disabled, external resources restricted; optional paid generation still uses first screenshot only.
+- **Tests:** new code committed but rebuild and manual sectional screenshot test on Mac are **pending**; Windows remains untested. Do not claim production safety for arbitrary URLs.
