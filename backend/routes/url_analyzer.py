@@ -33,27 +33,26 @@ def approved_hosts() -> set[str]:
 
 def verify_url(url: str) -> str:
     value = url.strip()
+    parsed = urlsplit(value)
+    hostname = (parsed.hostname or "").lower().rstrip(".")
     try:
-        parsed = urlsplit(value)
-        hostname = (parsed.hostname or "").lower().rstrip(".")
-        if (
-            parsed.scheme != "https"
-            or not hostname
-            or hostname not in approved_hosts()
-            or parsed.username is not None or parsed.password is not None
-            or parsed.port not in (None, 443)
-            or "\\" in value or any(ord(c) < 32 for c in value)
-        ):
-            raise ValueError("URL must be HTTPS on an explicitly approved public hostname.")
-        ipaddress.ip_address(hostname)
-        raise ValueError("IP-address targets are not allowed.")
+        port = parsed.port
     except ValueError as exc:
-        if str(exc) == "IP-address targets are not allowed.":
-            raise
-        if "URL must be HTTPS" in str(exc):
-            raise
-        # Literal IP test raises ValueError for ordinary hostnames; expected.
-    return value
+        raise ValueError("Invalid URL port.") from exc
+    if (
+        parsed.scheme != "https"
+        or not hostname
+        or hostname not in approved_hosts()
+        or parsed.username is not None or parsed.password is not None
+        or port not in (None, 443)
+        or "\\\\" in value or any(ord(c) < 32 for c in value)
+    ):
+        raise ValueError("URL must be HTTPS on an explicitly approved public hostname.")
+    try:
+        ipaddress.ip_address(hostname)
+    except ValueError:
+        return value
+    raise ValueError("IP-address targets are not allowed.")
 
 
 async def verify_public_dns(url: str) -> None:
@@ -105,7 +104,7 @@ async def analyze_url(body: AnalyzeRequest):
                     verify_url(target)
                     await verify_public_dns(target)
                     await route.continue_()
-                except (ValueError, Exception):
+                except Exception:
                     await route.abort()
             await page.route("**/*", route_request)
             response = await page.goto(url, wait_until="domcontentloaded", timeout=15000)
