@@ -84,3 +84,11 @@ Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `do
 - **Confirmed successful:** recovering from prior TypeScript syntax regression; basic Chromium screenshot and richer Arabic DOM analysis on Mac.
 - **Not yet confirmed:** full-page capture, safe dynamic JavaScript, pixel-diff similarity, Windows run, and production network isolation.
 - **Next decision:** add configurable full-page capture with size/pixel limits and preserve first-viewport capture as default. Keep generation with Claude optional and separate.
+
+## 2026-10-26 — Bounded full-page screenshot implementation
+
+- Implemented optional **Full Page (bounded)** switch in URL input; default first-viewport behavior stays unchanged.
+- Backend attempts full-page capture if document height is at most **4500 CSS pixels** and viewport width × document height is at most **6 million pixels**. If too large, returns the first viewport with a warning. PNG payload remains capped at 5 MB.
+- UI labels the actual capture mode and continues to keep **Analyze URL (no AI)** separate from paid generation.
+- Commits: `3189a8c` (backend), `cc5dea1` (frontend). **Not yet rebuilt or verified on the user's Mac/Windows**. Continue to treat existing SSRF/network isolation restrictions as incomplete for public exposure.
+- Acceptance: rebuild Docker; analyze owned home page with Full Page selected; verify more sections visible or warning/fallback; repeat Desktop/Mobile and first-viewport capture without AI calls.
