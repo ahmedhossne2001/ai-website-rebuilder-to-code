@@ -66,3 +66,11 @@ Build an AI-assisted tool for reconstructing **public, permitted website user in
 **Update this file with every substantial code milestone**, including the date, commit/branch, features changed, tests actually run, known limits, and next actions. Never mark a test passed merely because code was committed. Review periodically for stale status and append a dated log entry rather than silently rewriting history.
 
 Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `docs/SAVE_OPEN_PROJECTS.md`, `docs/PROJECT_MANAGER.md`, `docs/VISUAL_COMPARISON.md`, `docs/URL_ANALYZER.md`.
+
+## 2026-10-26 — URL tab frontend build regression and fix
+
+- **Observed on user's Mac:** Vite / Babel failed to parse `frontend/src/components/unified-input/tabs/UrlTab.tsx`, line 37, with `Unexpected token, expected \",\"`.
+- **Root cause verified in GitHub source:** a literal escaped `\\n` sequence was inserted inside a TypeScript state object type while adding URL analysis warnings/geometry fields.
+- **Fix committed:** replace the literal escape with an actual newline in `UrlTab.tsx`, commit `6957b99` on `feature/hybrid-cross-platform-setup`.
+- **Verification:** source-level correction committed. Mac Docker build and URL page UI retest **pending**; do not mark as passed until user confirms.
+- **Next:** pull/rebuild Mac app, confirm it renders, then analyze `https://www.alhashmyahh.com/` without invoking Claude.
