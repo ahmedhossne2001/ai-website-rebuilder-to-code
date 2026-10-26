@@ -112,20 +112,66 @@ async def analyze_url(body: AnalyzeRequest):
                 raise ValueError("Page failed to load successfully.")
             final_url = verify_url(page.url)
             await verify_public_dns(final_url)
+            # Let allowed stylesheet/font resources settle before sampling.
+            try:
+                await page.wait_for_load_state("networkidle", timeout=3500)
+            except Exception:
+                pass  # Some pages keep connections open; inspect what rendered.
+            try:
+                await page.evaluate("() => document.fonts.ready")
+            except Exception:
+                pass
+            details = await page.evaluate("""() => {
+              const visible = (e) => {
+                const r = e.getBoundingClientRect();
+                const cs = getComputedStyle(e);
+                return r.width > 0 && r.height > 0 &&
+                    cs.display !== 'none' && cs.visibility !== 'hidden';
+              };
+              const sample = (e) => {
+                const cs = getComputedStyle(e), r = e.getBoundingClientRect();
+                return {
+                  tag: e.tagName.toLowerCase(),
+                  text: (e.innerText || e.textContent || '').trim().slice(0, 120),
+                  x: Math.round(r.x), y: Math.round(r.y),
+                  width: Math.round(r.width), height: Math.round(r.height),
+                  color: cs.color, background: cs.backgroundColor,
+                  font: cs.fontFamily.slice(0, 120), fontSize: cs.fontSize,
+                  weight: cs.fontWeight
+                };
+              };
+              const all = [...document.querySelectorAll('h1,h2,h3,p,button,a,header,nav,section,main,img')];
+              const items = all.filter(visible).slice(0, 250);
+              const headings = items.filter(e => /^H[1-3]$/.test(e.tagName))
+                  .slice(0, 25).map(e => (e.innerText || e.textContent || '').trim().slice(0, 160));
+              const colors = [...new Set(items.map(e => getComputedStyle(e).color))].slice(0, 16);
+              const backgrounds = [...new Set([document.body, ...items].map(e => getComputedStyle(e).backgroundColor))].slice(0, 16);
+              const fonts = [...new Set(items.map(e => getComputedStyle(e).fontFamily))].slice(0, 16);
+              const rects = items.filter(e => /^(H1|H2|H3|BUTTON|HEADER|NAV|MAIN|SECTION)$/.test(e.tagName))
+                .slice(0, 40).map(sample);
+              const bodyText = (document.body?.innerText || document.body?.textContent || '').trim();
+              return {
+                title: document.title.slice(0, 160), headings, colors, backgrounds, fonts,
+                language: document.documentElement.lang || null,
+                direction: getComputedStyle(document.body).direction,
+                bodyTextSample: bodyText.slice(0, 450),
+                visibleElementCount: items.length,
+                linkCount: document.querySelectorAll('a[href]').length,
+                imageCount: document.querySelectorAll('img').length,
+                sections: rects,
+                documentHeight: document.documentElement.scrollHeight,
+              };
+            }""")
+            warnings = []
+            if not details["headings"]:
+                warnings.append("No visible H1-H3 headings detected; page content may be incomplete.")
+            if details["visibleElementCount"] < 8:
+                warnings.append("Very few visible elements detected; inspect screenshot before generating.")
+            if details["documentHeight"] > viewport["height"]:
+                warnings.append("Screenshot shows the first viewport only; more content exists below.")
             screenshot = await page.screenshot(type="png", full_page=False, timeout=12000)
             if len(screenshot) > 5_000_000:
                 raise ValueError("Screenshot is too large.")
-            # Text-only DOM inspection. No scripts from the target page are executed.
-            details = await page.evaluate("""() => {
-              const els = [...document.querySelectorAll('h1,h2,p,button,a')].slice(0,120);
-              return {
-                title: document.title.slice(0, 160),
-                headings: [...document.querySelectorAll('h1,h2')].slice(0,15).map(e => (e.textContent || '').trim().slice(0,120)),
-                colors: [...new Set(els.map(e => getComputedStyle(e).color))].slice(0,10),
-                backgrounds: [...new Set([document.body, ...els].map(e => getComputedStyle(e).backgroundColor))].slice(0,10),
-                fonts: [...new Set(els.map(e => getComputedStyle(e).fontFamily))].slice(0,10)
-              };
-            }""")
             await browser.close()
         return {
             "url": final_url,
@@ -133,6 +179,7 @@ async def analyze_url(body: AnalyzeRequest):
             "viewport": viewport,
             "screenshot": "data:image/png;base64," + base64.b64encode(screenshot).decode(),
             "design": details,
+            "warnings": warnings,
             "limitations": "JavaScript disabled; remote third-party assets blocked unless explicitly allowlisted. Layout may be incomplete.",
         }
     except ValueError as exc:
