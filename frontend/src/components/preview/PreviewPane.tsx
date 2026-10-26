@@ -204,6 +204,16 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
                 <SelectAndEditToolbarButton />
               )}
             {(appState === AppState.CODE_READY || isSelectedVariantComplete) && (
+              <>
+              <Button
+                onClick={() => downloadCode(previewCode, "react")}
+                variant="outline"
+                size="sm"
+                title="Download an editable Vite + React + Tailwind project"
+                data-testid="download-react-project"
+              >
+                React ZIP
+              </Button>
               <Button
                 onClick={() => downloadCode(previewCode)}
                 variant="ghost"
@@ -214,6 +224,7 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
               >
                 <LuDownload />
               </Button>
+              </>
             )}
             <Button
               onClick={() => {
