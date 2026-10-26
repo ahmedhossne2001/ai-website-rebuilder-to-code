@@ -38,7 +38,8 @@ function UrlTab({
     screenshot: string;
     device: "desktop" | "mobile";
     viewport: { width: number; height: number };
-    design: { title: string; headings: string[]; colors: string[]; backgrounds: string[]; fonts: string[]; language?: string; direction?: string; bodyTextSample?: string; visibleElementCount?: number; linkCount?: number; imageCount?: number; documentHeight?: number; sections?: Array<{tag:string;text:string;x:number;y:number;width:number;height:number;fontSize:string}> };\n    warnings?: string[];
+    design: { title: string; headings: string[]; colors: string[]; backgrounds: string[]; fonts: string[]; language?: string; direction?: string; bodyTextSample?: string; visibleElementCount?: number; linkCount?: number; imageCount?: number; documentHeight?: number; sections?: Array<{tag:string;text:string;x:number;y:number;width:number;height:number;fontSize:string}> };
+    warnings?: string[];
     limitations: string;
   }>(null);
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
