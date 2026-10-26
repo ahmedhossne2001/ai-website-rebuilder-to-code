@@ -41,6 +41,7 @@ function UrlTab({
     design: { title: string; headings: string[]; colors: string[]; backgrounds: string[]; fonts: string[]; language?: string; direction?: string; bodyTextSample?: string; visibleElementCount?: number; linkCount?: number; imageCount?: number; documentHeight?: number; sections?: Array<{tag:string;text:string;x:number;y:number;width:number;height:number;fontSize:string}> };
     warnings?: string[];
     capturedFullPage?: boolean;
+    sectionsCaptured?: Array<{ y: number; image: string }>;
     limitations: string;
   }>(null);
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
@@ -225,6 +226,18 @@ function UrlTab({
             <p className="text-sm font-semibold">Captured: {analysis.design.title || analysis.url}</p>
             <p className="text-xs text-gray-500">{analysis.device} · {analysis.viewport.width} × {analysis.viewport.height}px viewport · {analysis.capturedFullPage ? "Full page captured" : "First viewport captured"}</p>
             <img src={analysis.screenshot} alt="Captured website screenshot" className="max-h-72 w-full rounded border object-contain object-top" />
+            {!!analysis.sectionsCaptured?.length && <div className="mt-3 rounded-lg border p-2">
+              <p className="mb-2 text-xs font-semibold">Additional page sections ({analysis.sectionsCaptured.length})</p>
+              <p className="mb-3 text-xs text-gray-500">Separate bounded screenshots, not a stitched full-page image. JavaScript remains disabled.</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {analysis.sectionsCaptured.map((section, i) => (
+                  <div key={i} className="overflow-hidden rounded border">
+                    <p className="bg-gray-100 px-2 py-1 text-xs dark:bg-zinc-800">Section {i + 2} · scroll offset {section.y}px</p>
+                    <img src={section.image} alt={`Website page section ${i + 2}`} className="w-full object-contain object-top" loading="lazy" />
+                  </div>
+                ))}
+              </div>
+            </div>}
             <p className="text-xs"><b>Headings:</b> {analysis.design.headings.join(" · ") || "None found"}</p>
             <p className="text-xs"><b>Text colors:</b> {analysis.design.colors.join(", ") || "Not available"}</p>
             <p className="text-xs"><b>Backgrounds:</b> {analysis.design.backgrounds.join(", ") || "Not available"}</p>
@@ -241,7 +254,7 @@ function UrlTab({
               <ul className="list-disc pl-5">{analysis.warnings.map((warning, i) => <li key={i}>{warning}</li>)}</ul>
             </div>}
             <p className="text-xs text-amber-700 dark:text-amber-300">{analysis.limitations}</p>
-            <p className="text-xs text-gray-500">Generate calls the selected AI API and may incur charges.</p>
+            <p className="text-xs text-gray-500">Generate currently uses the primary screenshot only, not the additional sections. It calls the selected AI API and may incur charges.</p>
           </div>}
         </div>
       </div>
