@@ -142,7 +142,7 @@ function UrlTab({
   ) => {
     if (event.key === "Enter" && !event.shiftKey && !isLoading) {
       event.preventDefault();
-      takeScreenshot();
+      void analyzeOnly();
     }
   };
 
@@ -181,7 +181,7 @@ function UrlTab({
             onKeyDown={(event) => {
               if (event.key === "Enter" && !isLoading) {
                 event.preventDefault();
-                takeScreenshot();
+                void analyzeOnly();
               }
             }}
             className="h-11 w-full"
