@@ -34,10 +34,10 @@ Build an AI-assisted tool for reconstructing **public, permitted website user in
 
 ## 4. Current development milestone — URL analysis improvements
 
-- Record page details with richer DOM inspection: visible headings, key elements with rectangles, typography, background and link/image counts.
-- Report capture quality warnings rather than implying every target was reconstructed completely.
+- **Implemented in branch, not yet tested:** richer DOM inspection with visible headings, key element rectangles, typography, backgrounds and link/image counts.
+- **Implemented in branch, not yet tested:** capture quality warnings for missing headings, low element counts and long pages.
 - Keep local Chromium analysis separate from **Generate with selected AI model**.
-- Allow the **user-owned test site** `https://www.alhashmyahh.com/` by explicit dev-only hostname allowlist, subject to network restrictions. The publicly accessible site advertises aluminum/glass manufacturing and contracting services, with multiple navigation categories; an effective real-world Arabic/RTL fixture.
+- **Configured locally, not yet tested:** allow **user-owned test site** `https://www.alhashmyahh.com/` by explicit dev-only hostname allowlist, subject to network restrictions. The publicly accessible site advertises aluminum/glass manufacturing and contracting services, with multiple navigation categories; an effective real-world Arabic/RTL fixture.
 - Do not copy, alter, deploy to, or authenticate against the original website. Read-only test only.
 - Validate Mac behavior; Windows pending.
 
@@ -59,7 +59,7 @@ Build an AI-assisted tool for reconstructing **public, permitted website user in
 | 2026-10-26 | JSON save/open and named Project Manager | Implemented; Mac manual tests passed |
 | 2026-10-26 | Visual Comparison, adjustable alignment, Difference mode | Implemented; Mac screenshot tests passed |
 | 2026-10-26 | Restricted Analyze URL without AI | Implemented; basic capture passed, fidelity needs work |
-| 2026-10-26 | Progress log and richer URL analysis work | In progress; verify local build and outputs |
+| 2026-10-26 | Progress log created and URL analyzer enriched with DOM geometry, Arabic/RTL hints and quality warnings | Committed; Mac Docker rebuild and verification pending |\n| 2026-10-26 | User-owned alhashmyahh.com authorized for local read-only analysis | Allowlist configured; site test still pending |
 
 ## 7. Documentation maintenance policy
 
