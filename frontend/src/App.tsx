@@ -32,7 +32,8 @@ import {
 import { useEscapeToExitSelectMode } from "./components/select-and-edit/useEscapeToExitSelectMode";
 import Sidebar from "./components/sidebar/Sidebar";
 import IconStrip from "./components/sidebar/IconStrip";
-import { downloadProjectFile, parseSavedProject, SavedProject } from "./lib/projectBackup";
+import { downloadProjectFile, parseSavedProject } from "./lib/projectBackup";
+import type { SavedProject } from "./lib/projectBackup";
 import HistoryDisplay from "./components/history/HistoryDisplay";
 import PreviewPane from "./components/preview/PreviewPane";
 import StartPane from "./components/start-pane/StartPane";
