@@ -40,9 +40,11 @@ function UrlTab({
     viewport: { width: number; height: number };
     design: { title: string; headings: string[]; colors: string[]; backgrounds: string[]; fonts: string[]; language?: string; direction?: string; bodyTextSample?: string; visibleElementCount?: number; linkCount?: number; imageCount?: number; documentHeight?: number; sections?: Array<{tag:string;text:string;x:number;y:number;width:number;height:number;fontSize:string}> };
     warnings?: string[];
+    capturedFullPage?: boolean;
     limitations: string;
   }>(null);
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
+  const [fullPage, setFullPage] = useState(false);
 
   async function analyzeOnly() {
     if (!referenceUrl.trim()) { toast.error("Enter an HTTPS website URL."); return; }
@@ -52,7 +54,7 @@ function UrlTab({
       const response = await fetch(`${HTTP_BACKEND_URL}/api/analyze-url`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: referenceUrl.trim(), device }),
+        body: JSON.stringify({ url: referenceUrl.trim(), device, fullPage }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.detail || "URL analysis failed.");
@@ -206,6 +208,10 @@ function UrlTab({
                 <option value="mobile">Mobile</option>
               </select>
             </label>
+            <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={fullPage}
+              onChange={(e) => { setFullPage(e.target.checked); setAnalysis(null); }} />
+              Full Page (bounded)
+            </label>
             <button type="button" className="rounded bg-violet-700 px-4 py-2 text-sm text-white disabled:opacity-50"
               onClick={analyzeOnly} disabled={analysisLoading || isLoading} data-testid="analyze-url">
               {analysisLoading ? "Analyzing…" : "Analyze URL (no AI)"}
@@ -217,7 +223,7 @@ function UrlTab({
           </div>
           {analysis && <div className="mt-4 space-y-2 rounded-lg border p-3 dark:border-zinc-700" data-testid="url-analysis-result">
             <p className="text-sm font-semibold">Captured: {analysis.design.title || analysis.url}</p>
-            <p className="text-xs text-gray-500">{analysis.device} · {analysis.viewport.width} × {analysis.viewport.height}px</p>
+            <p className="text-xs text-gray-500">{analysis.device} · {analysis.viewport.width} × {analysis.viewport.height}px viewport · {analysis.capturedFullPage ? "Full page captured" : "First viewport captured"}</p>
             <img src={analysis.screenshot} alt="Captured website screenshot" className="max-h-72 w-full rounded border object-contain object-top" />
             <p className="text-xs"><b>Headings:</b> {analysis.design.headings.join(" · ") || "None found"}</p>
             <p className="text-xs"><b>Text colors:</b> {analysis.design.colors.join(", ") || "Not available"}</p>
