@@ -1,4 +1,4 @@
-import { LuClock, LuCode, LuSettings, LuPlus, LuSave, LuFolderOpen } from "react-icons/lu";
+import { LuClock, LuCode, LuSettings, LuPlus, LuSave, LuFolderOpen, LuLayoutGrid } from "react-icons/lu";
 
 interface IconStripProps {
   isHistoryOpen: boolean;
@@ -14,6 +14,7 @@ interface IconStripProps {
   onSaveProject: () => void;
   onLoadProject: () => void;
   canSaveProject: boolean;
+  onManageProjects: () => void;
 }
 
 function IconStrip({
@@ -30,6 +31,7 @@ function IconStrip({
   onSaveProject,
   onLoadProject,
   canSaveProject,
+  onManageProjects,
 }: IconStripProps) {
   return (
     <div className="flex w-full items-center justify-between border-b border-gray-200 bg-gray-50 px-2 py-2 dark:border-zinc-800 dark:bg-zinc-900 lg:h-full lg:w-16 lg:flex-col lg:items-center lg:gap-y-3 lg:border-b-0 lg:border-r lg:px-0 lg:py-4">
@@ -94,6 +96,14 @@ function IconStrip({
         >
           <LuFolderOpen className="w-[18px] h-[18px]" />
           <span className="hidden text-[10px] leading-none lg:block">Open</span>
+        </button>
+        <button
+          onClick={onManageProjects}
+          className="flex items-center justify-center rounded-lg p-2 text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-zinc-800 lg:flex-col lg:gap-1 lg:px-2 lg:py-1.5"
+          title="Project Manager"
+        >
+          <LuLayoutGrid className="w-[18px] h-[18px]" />
+          <span className="hidden text-[10px] leading-none lg:block">Projects</span>
         </button>
         <button
           onClick={onNewProject}
