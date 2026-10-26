@@ -95,6 +95,8 @@ function App() {
       geminiApiKey: null,
       screenshotOneApiKey: null,
       isImageGenerationEnabled: true,
+      testMode: false,
+      testModel: "openai",
       editorTheme: EditorTheme.COBALT,
       generatedCodeConfig: Stack.HTML_TAILWIND,
       codeGenerationModel: CodeGenerationModel.GEMINI_3_FLASH_PREVIEW_MINIMAL,
@@ -338,8 +340,9 @@ function App() {
 
     // Use 4 variants for create, 2 for edits to match backend counts
     // and avoid a flash when the backend sends the actual variant count
-    const initialVariantCount =
-      requestParams.generationType === "create" ? 4 : 2;
+    const initialVariantCount = settings.testMode
+      ? 1
+      : requestParams.generationType === "create" ? 4 : 2;
     const baseCommitObject = {
       variants: Array(initialVariantCount)
         .fill(null)
