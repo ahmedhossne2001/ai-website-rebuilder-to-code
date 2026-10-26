@@ -32,6 +32,9 @@ import {
 import { useEscapeToExitSelectMode } from "./components/select-and-edit/useEscapeToExitSelectMode";
 import Sidebar from "./components/sidebar/Sidebar";
 import IconStrip from "./components/sidebar/IconStrip";
+import ProjectManager from "./components/projects/ProjectManager";
+import { listLocalProjects, readLocalProject, saveLocalProject, renameLocalProject, deleteLocalProject } from "./lib/localProjects";
+import type { ProjectRecord } from "./lib/localProjects";
 import { downloadProjectFile, parseSavedProject } from "./lib/projectBackup";
 import type { SavedProject } from "./lib/projectBackup";
 import HistoryDisplay from "./components/history/HistoryDisplay";
@@ -44,6 +47,11 @@ import { createCommit } from "./components/commits/utils";
 
 function App() {
   const projectFileInputRef = useRef<HTMLInputElement>(null);
+  const [isProjectManagerOpen, setIsProjectManagerOpen] = useState(false);
+  const [localProjects, setLocalProjects] = useState<ProjectRecord[]>(() => listLocalProjects());
+  const [activeLocalProjectId, setActiveLocalProjectId] = useState<string | null>(null);
+  const [activeLocalProjectName, setActiveLocalProjectName] = useState("My Website");
+  const refreshLocalProjects = () => setLocalProjects(listLocalProjects());
   const {
     // Inputs
     inputMode,
@@ -260,6 +268,75 @@ function App() {
     setReferenceImages([]);
   };
 
+  const currentProjectSnapshot = (): SavedProject => {
+    const state = useProjectStore.getState();
+    return {
+      schema: "ai-website-rebuilder-project",
+      version: 1,
+      savedAt: new Date().toISOString(),
+      inputMode: state.inputMode,
+      initialPrompt: state.initialPrompt,
+      referenceImages: state.referenceImages,
+      assetsById: state.assetsById,
+      commits: state.commits,
+      head: state.head,
+      latestCommitHash: state.latestCommitHash,
+    };
+  };
+
+  const saveNamedProject = (name: string) => {
+    if (appState !== AppState.CODE_READY) {
+      toast.error("Finish generating before saving.");
+      return;
+    }
+    try {
+      const record = saveLocalProject(currentProjectSnapshot(), name, activeLocalProjectId ?? undefined);
+      setActiveLocalProjectId(record.id);
+      setActiveLocalProjectName(record.name);
+      refreshLocalProjects();
+      toast.success("Saved locally. Export a JSON backup for safekeeping.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save project.");
+    }
+  };
+
+  const restoreSnapshot = (snapshot: SavedProject) => {
+    reset();
+    useProjectStore.setState({
+      inputMode: snapshot.inputMode,
+      initialPrompt: snapshot.initialPrompt,
+      referenceImages: snapshot.referenceImages,
+      assetsById: snapshot.assetsById,
+      commits: snapshot.commits,
+      head: snapshot.head,
+      latestCommitHash: snapshot.latestCommitHash,
+      executionConsoles: {},
+    });
+    setAppState(snapshot.head ? AppState.CODE_READY : AppState.INITIAL);
+    setIsSettingsOpen(false);
+    setIsHistoryOpen(false);
+    setMobilePane("preview");
+  };
+
+  const openNamedProject = (id: string) => {
+    if (appState === AppState.CODING) {
+      toast.error("Finish or cancel generation first.");
+      return;
+    }
+    try {
+      const snapshot = readLocalProject(id);
+      const record = listLocalProjects().find((p) => p.id === id);
+      if (!window.confirm("Open " + (record?.name ?? "this project") + "? Unsaved changes will be lost.")) return;
+      restoreSnapshot(snapshot);
+      setActiveLocalProjectId(id);
+      setActiveLocalProjectName(record?.name ?? "My Website");
+      setIsProjectManagerOpen(false);
+      toast.success("Project restored locally.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not open project.");
+    }
+  };
+
   const saveProject = () => {
     if (appState === AppState.CODING) {
       toast.error("Finish or cancel generation before saving.");
@@ -291,6 +368,12 @@ function App() {
       if (file.size > 30_000_000) throw new Error("Project exceeds the 30 MB limit.");
       const snapshot = parseSavedProject(await file.text());
       if (!window.confirm("Open this project? Unsaved current work will be replaced.")) return;
+      restoreSnapshot(snapshot);
+      setActiveLocalProjectId(null);
+      setActiveLocalProjectName("Imported project");
+      /* Project state was restored above. */
+      /* removed redundant restoration */
+      /*
       reset();
       useProjectStore.setState({
         inputMode: snapshot.inputMode,
@@ -306,6 +389,7 @@ function App() {
       setIsSettingsOpen(false);
       setIsHistoryOpen(false);
       setMobilePane("preview");
+      */
       toast.success("Project restored from backup.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not open project.");
@@ -866,6 +950,40 @@ function App() {
           event.target.value = "";
         }}
       />
+      {isProjectManagerOpen && (
+        <ProjectManager
+          projects={localProjects}
+          currentName={activeLocalProjectName}
+          canSave={appState === AppState.CODE_READY && !!head}
+          onClose={() => setIsProjectManagerOpen(false)}
+          onSave={saveNamedProject}
+          onOpen={openNamedProject}
+          onRename={(id, name) => {
+            try {
+              renameLocalProject(id, name);
+              if (id === activeLocalProjectId) setActiveLocalProjectName(name.trim());
+              refreshLocalProjects();
+            } catch (e) { toast.error(e instanceof Error ? e.message : "Rename failed."); }
+          }}
+          onDelete={(id) => {
+            try {
+              deleteLocalProject(id);
+              if (activeLocalProjectId === id) setActiveLocalProjectId(null);
+              refreshLocalProjects();
+              toast.success("Saved project deleted from this browser.");
+            } catch (e) { toast.error(e instanceof Error ? e.message : "Delete failed."); }
+          }}
+          onBackup={(id) => {
+            try { downloadProjectFile(readLocalProject(id)); }
+            catch (e) { toast.error(e instanceof Error ? e.message : "Backup failed."); }
+          }}
+          onImportJson={() => {
+            setIsProjectManagerOpen(false);
+            projectFileInputRef.current?.click();
+          }}
+          onExportJson={saveProject}
+        />
+      )}
       {/* Icon strip - always visible */}
       <div
         className="sticky top-0 z-50 lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-16 lg:flex-col"
@@ -892,10 +1010,17 @@ function App() {
             setMobilePane("preview");
           }}
           onNewProject={() => {
+            if (head && !window.confirm("Start new project? Save your current work first; unsaved changes will be lost.")) return;
             reset();
+            setActiveLocalProjectId(null);
+            setActiveLocalProjectName("My Website");
             setIsHistoryOpen(false);
             setIsSettingsOpen(false);
             setMobilePane("preview");
+          }}
+          onManageProjects={() => {
+            refreshLocalProjects();
+            setIsProjectManagerOpen(true);
           }}
           onSaveProject={saveProject}
           onLoadProject={() => {
