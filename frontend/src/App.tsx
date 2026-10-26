@@ -32,6 +32,7 @@ import {
 import { useEscapeToExitSelectMode } from "./components/select-and-edit/useEscapeToExitSelectMode";
 import Sidebar from "./components/sidebar/Sidebar";
 import IconStrip from "./components/sidebar/IconStrip";
+import { downloadProjectFile, parseSavedProject, SavedProject } from "./lib/projectBackup";
 import HistoryDisplay from "./components/history/HistoryDisplay";
 import PreviewPane from "./components/preview/PreviewPane";
 import StartPane from "./components/start-pane/StartPane";
@@ -41,6 +42,7 @@ import { AiEditCommit, Commit } from "./components/commits/types";
 import { createCommit } from "./components/commits/utils";
 
 function App() {
+  const projectFileInputRef = useRef<HTMLInputElement>(null);
   const {
     // Inputs
     inputMode,
@@ -255,6 +257,58 @@ function App() {
     // Inputs
     setInputMode("image");
     setReferenceImages([]);
+  };
+
+  const saveProject = () => {
+    if (appState === AppState.CODING) {
+      toast.error("Finish or cancel generation before saving.");
+      return;
+    }
+    const state = useProjectStore.getState();
+    if (!state.head || !Object.keys(state.commits).length) {
+      toast.error("There is no project to save.");
+      return;
+    }
+    const snapshot: SavedProject = {
+      schema: "ai-website-rebuilder-project",
+      version: 1,
+      savedAt: new Date().toISOString(),
+      inputMode: state.inputMode,
+      initialPrompt: state.initialPrompt,
+      referenceImages: state.referenceImages,
+      assetsById: state.assetsById,
+      commits: state.commits,
+      head: state.head,
+      latestCommitHash: state.latestCommitHash,
+    };
+    downloadProjectFile(snapshot);
+    toast.success("Project backup downloaded.");
+  };
+
+  const loadProject = async (file: File) => {
+    try {
+      if (file.size > 30_000_000) throw new Error("Project exceeds the 30 MB limit.");
+      const snapshot = parseSavedProject(await file.text());
+      if (!window.confirm("Open this project? Unsaved current work will be replaced.")) return;
+      reset();
+      useProjectStore.setState({
+        inputMode: snapshot.inputMode,
+        initialPrompt: snapshot.initialPrompt,
+        referenceImages: snapshot.referenceImages,
+        assetsById: snapshot.assetsById,
+        commits: snapshot.commits,
+        head: snapshot.head,
+        latestCommitHash: snapshot.latestCommitHash,
+        executionConsoles: {},
+      });
+      setAppState(snapshot.head ? AppState.CODE_READY : AppState.INITIAL);
+      setIsSettingsOpen(false);
+      setIsHistoryOpen(false);
+      setMobilePane("preview");
+      toast.success("Project restored from backup.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not open project.");
+    }
   };
 
   const regenerate = () => {
@@ -799,6 +853,18 @@ function App() {
         />
       )}
 
+      <input
+        ref={projectFileInputRef}
+        type="file"
+        accept=".json,application/json"
+        className="hidden"
+        aria-label="Open saved project"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) void loadProject(file);
+          event.target.value = "";
+        }}
+      />
       {/* Icon strip - always visible */}
       <div
         className="sticky top-0 z-50 lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-16 lg:flex-col"
@@ -830,6 +896,15 @@ function App() {
             setIsSettingsOpen(false);
             setMobilePane("preview");
           }}
+          onSaveProject={saveProject}
+          onLoadProject={() => {
+            if (appState === AppState.CODING) {
+              toast.error("Finish or cancel generation before opening a project.");
+            } else {
+              projectFileInputRef.current?.click();
+            }
+          }}
+          canSaveProject={appState === AppState.CODE_READY && !!head}
           onOpenSettings={() => {
             setIsSettingsOpen(true);
             setIsHistoryOpen(false);
