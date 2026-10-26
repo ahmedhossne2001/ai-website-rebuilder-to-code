@@ -21,6 +21,7 @@ router = APIRouter()
 class AnalyzeRequest(BaseModel):
     url: str = Field(min_length=8, max_length=2048)
     device: str = "desktop"
+    fullPage: bool = False
 
 
 def approved_hosts() -> set[str]:
@@ -167,9 +168,15 @@ async def analyze_url(body: AnalyzeRequest):
                 warnings.append("No visible H1-H3 headings detected; page content may be incomplete.")
             if details["visibleElementCount"] < 8:
                 warnings.append("Very few visible elements detected; inspect screenshot before generating.")
-            if details["documentHeight"] > viewport["height"]:
+            max_full_height = 4500
+            captured_full_page = False
+            if body.fullPage and details["documentHeight"] <= max_full_height and details["documentHeight"] * viewport["width"] <= 6_000_000:
+                captured_full_page = True
+            elif body.fullPage:
+                warnings.append("Page exceeds safe full-page capture limits (4500px height or 6MP); first viewport captured instead.")
+            if not captured_full_page and details["documentHeight"] > viewport["height"]:
                 warnings.append("Screenshot shows the first viewport only; more content exists below.")
-            screenshot = await page.screenshot(type="png", full_page=False, timeout=12000)
+            screenshot = await page.screenshot(type="png", full_page=captured_full_page, timeout=15000)
             if len(screenshot) > 5_000_000:
                 raise ValueError("Screenshot is too large.")
             await browser.close()
@@ -177,6 +184,7 @@ async def analyze_url(body: AnalyzeRequest):
             "url": final_url,
             "device": body.device,
             "viewport": viewport,
+            "capturedFullPage": captured_full_page,
             "screenshot": "data:image/png;base64," + base64.b64encode(screenshot).decode(),
             "design": details,
             "warnings": warnings,
