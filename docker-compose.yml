@@ -8,6 +8,8 @@ services:
     environment:
       # Ensure Python print/traceback output appears promptly in Docker logs.
       PYTHONUNBUFFERED: "1"
+      # Explicit read-only test hosts; only use in local development.
+      ANALYZER_ALLOWED_HOSTS: "example.com,www.alhashmyahh.com,alhashmyahh.com"
     ports:
       - "${BACKEND_PORT:-7001}:${BACKEND_PORT:-7001}"
     command: poetry run uvicorn main:app --host 0.0.0.0 --port ${BACKEND_PORT:-7001}
