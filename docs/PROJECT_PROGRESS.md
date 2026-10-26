@@ -74,3 +74,13 @@ Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `do
 - **Fix committed:** replace the literal escape with an actual newline in `UrlTab.tsx`, commit `6957b99` on `feature/hybrid-cross-platform-setup`.
 - **Verification:** source-level correction committed. Mac Docker build and URL page UI retest **pending**; do not mark as passed until user confirms.
 - **Next:** pull/rebuild Mac app, confirm it renders, then analyze `https://www.alhashmyahh.com/` without invoking Claude.
+
+## 2026-10-26 — User-confirmed Mac test: owned Arabic website URL analysis
+
+- **Evidence:** user-provided screenshot at 19:44 (local time), showing the working URL panel and successful response for `https://www.alhashmyahh.com`.
+- Captured the homepage hero with building photo, logo and Arabic navigation. The summary reports **1366 × 850** desktop viewport, **Arabic / RTL**, **71 visible elements**, **61 links**, **15 images** and **32 detected layout elements**.
+- Headings, computed text/background colors, font family (Arial/sans-serif) and a sample of Arabic text are visible in the output.
+- **Known warning:** screenshot covers only first viewport; page contains more content below. External assets remain constrained and JavaScript disabled; visual fidelity is not guaranteed.
+- **Confirmed successful:** recovering from prior TypeScript syntax regression; basic Chromium screenshot and richer Arabic DOM analysis on Mac.
+- **Not yet confirmed:** full-page capture, safe dynamic JavaScript, pixel-diff similarity, Windows run, and production network isolation.
+- **Next decision:** add configurable full-page capture with size/pixel limits and preserve first-viewport capture as default. Keep generation with Claude optional and separate.
