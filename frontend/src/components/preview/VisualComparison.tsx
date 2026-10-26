@@ -42,7 +42,8 @@ export default function VisualComparison({ code, referenceImage, device }: Props
     return () => observer.disconnect();
   }, [mode, reference]);
 
-  const frameWidth = Math.min(WIDTH[device], viewportWidth);
+  const availableWidth = mode === "side" && viewportWidth >= 768 ? Math.max(1, (viewportWidth - 16) / 2) : viewportWidth;
+  const frameWidth = Math.min(WIDTH[device], availableWidth);
   const alignment = { width: frameWidth * scale / 100, transform: `translate(${offsetX}px, ${offsetY}px)`, transformOrigin: "top left" as const };
   const image = (additionalClass = "") => (
     <img src={reference} alt="Reference screenshot" className={`absolute left-0 top-0 max-w-none select-none ${additionalClass}`}
@@ -95,7 +96,9 @@ export default function VisualComparison({ code, referenceImage, device }: Props
           <div className="relative flex min-h-0 flex-col overflow-hidden rounded-lg border bg-white">
             <div className="border-b px-3 py-1.5 text-xs font-medium">Original screenshot</div>
             <div className="relative min-h-0 flex-1 overflow-hidden bg-gray-100">
-              <img src={reference} alt="Original screenshot" className="h-full w-full object-contain object-top" />
+              <div className={`relative h-full overflow-hidden ${device === "mobile" ? "mx-auto" : ""}`} style={{ width: frameWidth }}>
+                {image()}
+              </div>
             </div>
           </div>
           <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border bg-white">
