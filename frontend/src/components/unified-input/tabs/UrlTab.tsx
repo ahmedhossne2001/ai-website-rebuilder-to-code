@@ -38,7 +38,7 @@ function UrlTab({
     screenshot: string;
     device: "desktop" | "mobile";
     viewport: { width: number; height: number };
-    design: { title: string; headings: string[]; colors: string[]; backgrounds: string[]; fonts: string[] };
+    design: { title: string; headings: string[]; colors: string[]; backgrounds: string[]; fonts: string[]; language?: string; direction?: string; bodyTextSample?: string; visibleElementCount?: number; linkCount?: number; imageCount?: number; documentHeight?: number; sections?: Array<{tag:string;text:string;x:number;y:number;width:number;height:number;fontSize:string}> };\n    warnings?: string[];
     limitations: string;
   }>(null);
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
@@ -194,7 +194,7 @@ function UrlTab({
             </p>
           ) : (
             <p className="text-[11px] text-gray-400 dark:text-zinc-500">
-              Requires a ScreenshotOne API key in Settings.
+              Analyze URL works without an AI key. The separate legacy Capture & Generate button requires ScreenshotOne.
             </p>
           )}
           <div className="flex flex-wrap items-center gap-2 pt-2">
@@ -222,6 +222,17 @@ function UrlTab({
             <p className="text-xs"><b>Text colors:</b> {analysis.design.colors.join(", ") || "Not available"}</p>
             <p className="text-xs"><b>Backgrounds:</b> {analysis.design.backgrounds.join(", ") || "Not available"}</p>
             <p className="text-xs"><b>Fonts:</b> {analysis.design.fonts.join(", ") || "Not available"}</p>
+            <p className="text-xs"><b>Language / direction:</b> {analysis.design.language || "Unknown"} / {analysis.design.direction || "Unknown"}</p>
+            <p className="text-xs"><b>Visible elements / links / images:</b> {analysis.design.visibleElementCount ?? "?"} / {analysis.design.linkCount ?? "?"} / {analysis.design.imageCount ?? "?"}</p>
+            {analysis.design.bodyTextSample && <p className="text-xs"><b>Page text sample:</b> {analysis.design.bodyTextSample}</p>}
+            {!!analysis.design.sections?.length && <details className="text-xs"><summary className="cursor-pointer font-semibold">Detected layout elements ({analysis.design.sections.length})</summary>
+              <div className="max-h-40 overflow-auto">
+                {analysis.design.sections.slice(0, 15).map((item, index) => <p key={index} className="border-b py-1">{item.tag} · {item.width}×{item.height} at ({item.x},{item.y}) · {item.fontSize} · {item.text.slice(0, 70)}</p>)}
+              </div>
+            </details>}
+            {!!analysis.warnings?.length && <div className="rounded bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-200"><b>Capture quality warnings:</b>
+              <ul className="list-disc pl-5">{analysis.warnings.map((warning, i) => <li key={i}>{warning}</li>)}</ul>
+            </div>}
             <p className="text-xs text-amber-700 dark:text-amber-300">{analysis.limitations}</p>
             <p className="text-xs text-gray-500">Generate calls the selected AI API and may incur charges.</p>
           </div>}
