@@ -32,6 +32,43 @@ function UrlTab({
   designSystem,
 }: Props) {
   const [isLoading, setIsLoading] = useState(false);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysis, setAnalysis] = useState<null | {
+    url: string;
+    screenshot: string;
+    device: "desktop" | "mobile";
+    viewport: { width: number; height: number };
+    design: { title: string; headings: string[]; colors: string[]; backgrounds: string[]; fonts: string[] };
+    limitations: string;
+  }>(null);
+  const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
+
+  async function analyzeOnly() {
+    if (!referenceUrl.trim()) { toast.error("Enter an HTTPS website URL."); return; }
+    setAnalysis(null);
+    setAnalysisLoading(true);
+    try {
+      const response = await fetch(`${HTTP_BACKEND_URL}/api/analyze-url`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: referenceUrl.trim(), device }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || "URL analysis failed.");
+      setAnalysis(data);
+      toast.success("Screenshot and design data captured. Claude was not used.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "URL analysis failed.");
+    } finally {
+      setAnalysisLoading(false);
+    }
+  }
+
+  function generateFromAnalysis() {
+    if (!analysis) { toast.error("Analyze a URL first."); return; }
+    // The existing image workflow uses the currently selected Test Mode model.
+    doCreate([analysis.screenshot], "image", textPrompt, isAssetExtractionEnabled);
+  }
   const [referenceUrl, setReferenceUrl] = useState("");
   const [textPrompt, setTextPrompt] = useState("");
   const [isAssetExtractionEnabled, setIsAssetExtractionEnabled] = useState(true);
@@ -139,7 +176,7 @@ function UrlTab({
             inputMode="url"
             autoComplete="url"
             placeholder="https://example.com"
-            onChange={(event) => setReferenceUrl(event.target.value)}
+            onChange={(event) => { setReferenceUrl(event.target.value); setAnalysis(null); }}
             value={referenceUrl}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !isLoading) {
@@ -160,6 +197,34 @@ function UrlTab({
               Requires a ScreenshotOne API key in Settings.
             </p>
           )}
+          <div className="flex flex-wrap items-center gap-2 pt-2">
+            <label className="text-xs">Capture viewport
+              <select className="ml-2 rounded border p-2 dark:bg-zinc-800"
+                value={device} onChange={(e) => { setDevice(e.target.value as "desktop" | "mobile"); setAnalysis(null); }}>
+                <option value="desktop">Desktop</option>
+                <option value="mobile">Mobile</option>
+              </select>
+            </label>
+            <button type="button" className="rounded bg-violet-700 px-4 py-2 text-sm text-white disabled:opacity-50"
+              onClick={analyzeOnly} disabled={analysisLoading || isLoading} data-testid="analyze-url">
+              {analysisLoading ? "Analyzing…" : "Analyze URL (no AI)"}
+            </button>
+            {analysis && <button type="button" className="rounded border px-4 py-2 text-sm disabled:opacity-50"
+              onClick={generateFromAnalysis} disabled={analysisLoading || isLoading} data-testid="generate-from-analysis">
+              Generate with selected AI model
+            </button>}
+          </div>
+          {analysis && <div className="mt-4 space-y-2 rounded-lg border p-3 dark:border-zinc-700" data-testid="url-analysis-result">
+            <p className="text-sm font-semibold">Captured: {analysis.design.title || analysis.url}</p>
+            <p className="text-xs text-gray-500">{analysis.device} · {analysis.viewport.width} × {analysis.viewport.height}px</p>
+            <img src={analysis.screenshot} alt="Captured website screenshot" className="max-h-72 w-full rounded border object-contain object-top" />
+            <p className="text-xs"><b>Headings:</b> {analysis.design.headings.join(" · ") || "None found"}</p>
+            <p className="text-xs"><b>Text colors:</b> {analysis.design.colors.join(", ") || "Not available"}</p>
+            <p className="text-xs"><b>Backgrounds:</b> {analysis.design.backgrounds.join(", ") || "Not available"}</p>
+            <p className="text-xs"><b>Fonts:</b> {analysis.design.fonts.join(", ") || "Not available"}</p>
+            <p className="text-xs text-amber-700 dark:text-amber-300">{analysis.limitations}</p>
+            <p className="text-xs text-gray-500">Generate calls the selected AI API and may incur charges.</p>
+          </div>}
         </div>
       </div>
 
@@ -175,7 +240,7 @@ function UrlTab({
         isAssetExtractionEnabled={isAssetExtractionEnabled}
         onAssetExtractionChange={setIsAssetExtractionEnabled}
         onGenerate={takeScreenshot}
-        actionLabel="Capture & Generate"
+        actionLabel="Capture & Generate (ScreenshotOne)"
         loadingActionLabel="Capturing…"
         isActionLoading={isLoading}
         actionTestId="url-capture"
