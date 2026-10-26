@@ -262,6 +262,7 @@ function App() {
     resetCommits();
     resetHead();
     resetPromptAssets();
+    setActiveLocalProjectId(null);
 
     // Inputs
     setInputMode("image");
