@@ -371,25 +371,6 @@ function App() {
       restoreSnapshot(snapshot);
       setActiveLocalProjectId(null);
       setActiveLocalProjectName("Imported project");
-      /* Project state was restored above. */
-      /* removed redundant restoration */
-      /*
-      reset();
-      useProjectStore.setState({
-        inputMode: snapshot.inputMode,
-        initialPrompt: snapshot.initialPrompt,
-        referenceImages: snapshot.referenceImages,
-        assetsById: snapshot.assetsById,
-        commits: snapshot.commits,
-        head: snapshot.head,
-        latestCommitHash: snapshot.latestCommitHash,
-        executionConsoles: {},
-      });
-      setAppState(snapshot.head ? AppState.CODE_READY : AppState.INITIAL);
-      setIsSettingsOpen(false);
-      setIsHistoryOpen(false);
-      setMobilePane("preview");
-      */
       toast.success("Project restored from backup.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not open project.");
