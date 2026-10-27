@@ -109,3 +109,11 @@ Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `do
 - **Confirmed:** UI gallery and bounded sectional-capture workflow functioned on Mac for this website; no paid AI generation was used during analysis.
 - **Remaining limitations:** sampling is not contiguous; sections may omit intermediate content or repeat sticky elements. The generation action still uses the **primary screenshot only**. JavaScript remains disabled; external resources remain constrained. Windows and production security are not verified.
 - **Next:** offer an explicit multi-section generation input with strong cost messaging and user consent; consider completeness/coverage indicators and a safe export of captured images before paying an AI provider. Keep original site read-only.
+
+## 2026-10-27 — Multi-section React generation UI committed (Mac verification pending)
+
+- After successful user testing of first viewport + 3 additional captures, implemented selectable screenshot checkboxes in URL Analyzer. First capture is selected by default; selecting further sections is optional.
+- Added local PNG downloads per captured section (no AI call) and a **Review & Generate with AI** step that previews the chosen images and requires an explicit second **Confirm & Generate** action. **Cancel** avoids any API call.
+- Reused existing `doCreate(imageUrls[], "image", prompt, assetExtraction)` multi-image path; images are sent top-to-bottom with guidance to reconstruct one responsive Arabic RTL page and avoid duplicated sticky headers. Each selected image potentially increases API charges. No model/provider spending cap is implied.
+- Code commits: `3c1f476`, `e219cf9`; details in `docs/MULTI_SECTION_GENERATION.md`.
+- **Pending:** frontend/Docker build, UI selection, cancellation, PNG download, and (only with user approval and available API credits) actual paid multi-image generation. Windows remains untested. No work on original public website.
