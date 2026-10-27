@@ -250,6 +250,68 @@ function SettingsTab({ settings, setSettings, appTheme, setAppTheme }: Props) {
             </div>
           </div>
 
+          {/* Low-cost diagnostic mode */}
+          <div className="rounded-lg border border-gray-200 bg-white dark:border-zinc-700 dark:bg-zinc-800/60">
+            <div className="border-b border-gray-100 px-4 py-3 dark:border-zinc-700">
+              <h2 className="text-sm font-medium text-gray-900 dark:text-white">
+                Test Mode — One Variant
+              </h2>
+            </div>
+            <div className="space-y-3 p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm text-gray-700 dark:text-zinc-300">
+                    Generate only one version
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-zinc-400">
+                    Reduces parallel model requests, but API usage can still incur charges.
+                  </p>
+                </div>
+                <Switch
+                  id="test-mode"
+                  checked={settings.testMode ?? false}
+                  onCheckedChange={(checked) =>
+                    setSettings((s) => ({ ...s, testMode: checked }))
+                  }
+                />
+              </div>
+              {settings.testMode && (
+                <div>
+                  <p className="mb-2 text-sm text-gray-700 dark:text-zinc-300">
+                    Test model
+                  </p>
+                  <Select
+                    name="test-model"
+                    value={settings.testModel ?? "openai"}
+                    onValueChange={(value) =>
+                      setSettings((s) => ({
+                        ...s,
+                        testModel: value as "openai" | "anthropic" | "gemini",
+                      }))
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      {settings.testModel === "anthropic"
+                        ? "Claude Sonnet 4.6 (Anthropic)"
+                        : settings.testModel === "gemini"
+                          ? "Gemini 3 Flash Minimal"
+                          : "GPT-5.4 Mini Low (OpenAI)"}
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="openai">GPT-5.4 Mini Low (OpenAI)</SelectItem>
+                      <SelectItem value="anthropic">Claude Sonnet 4.6 (Anthropic)</SelectItem>
+                      <SelectItem value="gemini">Gemini 3 Flash Minimal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="mt-2 text-xs text-gray-500 dark:text-zinc-400">
+                    Requires a valid API key and billing access for the selected provider.
+                    Disable placeholder image generation separately to limit extra work.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Image Generation */}
           <div className="rounded-lg border border-gray-200 bg-white dark:border-zinc-700 dark:bg-zinc-800/60">
             <div className="border-b border-gray-100 px-4 py-3 dark:border-zinc-700">

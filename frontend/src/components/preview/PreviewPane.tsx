@@ -23,6 +23,7 @@ import { downloadCode } from "./download";
 import { SelectAndEditToolbarButton } from "../select-and-edit/SelectAndEditControls";
 import { normalizeBabelCdn } from "../../lib/babelCdn";
 import ImageScanningPreview from "./ImageScanningPreview";
+import VisualComparison from "./VisualComparison";
 
 function prepareHtmlForNewTab(code: string) {
   const html = normalizeBabelCdn(code);
@@ -49,6 +50,7 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
   const { inputMode, head, commits, setHead } = useProjectStore();
   const [activeTab, setActiveTab] = useState("desktop");
   const [desktopScale, setDesktopScale] = useState(1);
+  const [comparisonDevice, setComparisonDevice] = useState<"desktop" | "mobile">("desktop");
   const [desktopViewMode, setDesktopViewMode] = useState<"fit" | "actual">("fit");
 
   // Sorted commit list for version navigation
@@ -104,6 +106,9 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
               </TabsTrigger>
               <TabsTrigger value="mobile" title="Mobile" data-testid="tab-mobile">
                 <FaMobile />
+              </TabsTrigger>
+              <TabsTrigger value="compare" title="Compare with screenshot" data-testid="tab-compare" className="gap-2">
+                Compare
               </TabsTrigger>
               <TabsTrigger value="code" title="Code" data-testid="tab-code" className="gap-2">
                 <FaCode />
@@ -204,6 +209,16 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
                 <SelectAndEditToolbarButton />
               )}
             {(appState === AppState.CODE_READY || isSelectedVariantComplete) && (
+              <>
+              <Button
+                onClick={() => downloadCode(previewCode, "react")}
+                variant="outline"
+                size="sm"
+                title="Download an editable Vite + React + Tailwind project"
+                data-testid="download-react-project"
+              >
+                React ZIP
+              </Button>
               <Button
                 onClick={() => downloadCode(previewCode)}
                 variant="ghost"
@@ -214,6 +229,7 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
               >
                 <LuDownload />
               </Button>
+              </>
             )}
             <Button
               onClick={() => {
@@ -257,6 +273,16 @@ function PreviewPane({ settings, onOpenVersions }: Props) {
               viewMode="actual"
             />
           )}
+        </TabsContent>
+        <TabsContent value="compare" className="flex-1 min-h-0 mt-0 overflow-hidden">
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="flex items-center gap-2 border-b px-3 py-1 text-xs">
+              Preview viewport:
+              <button type="button" aria-pressed={comparisonDevice === "desktop"} onClick={() => setComparisonDevice("desktop")} className={comparisonDevice === "desktop" ? "font-semibold underline" : ""}>Desktop</button>
+              <button type="button" aria-pressed={comparisonDevice === "mobile"} onClick={() => setComparisonDevice("mobile")} className={comparisonDevice === "mobile" ? "font-semibold underline" : ""}>Mobile</button>
+            </div>
+            <VisualComparison key={head ?? "new"} code={previewCode} referenceImage={sourceImage} device={comparisonDevice} />
+          </div>
         </TabsContent>
         <TabsContent value="code" className="flex-1 min-h-0 mt-0 overflow-auto">
           <CodeTab

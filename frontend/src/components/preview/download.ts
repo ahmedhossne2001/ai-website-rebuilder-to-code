@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 import { HTTP_BACKEND_URL } from "../../config";
 import { normalizeBabelCdn } from "../../lib/babelCdn";
 
@@ -17,7 +18,7 @@ function filenameFromContentDisposition(contentDisposition: string | null) {
   return match?.[1] ?? "screenshot-to-code-export.zip";
 }
 
-export const downloadCode = async (code: string) => {
+export const downloadCode = async (code: string, format: "html" | "react" = "html") => {
   try {
     const response = await fetch(`${HTTP_BACKEND_URL}/api/export`, {
       method: "POST",
@@ -26,12 +27,14 @@ export const downloadCode = async (code: string) => {
       },
       body: JSON.stringify({
         code,
+        format,
         baseUrl: window.location.href,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`Export failed with status ${response.status}`);
+      const details = await response.json().catch(() => ({}));
+      throw new Error(typeof details.detail === "string" ? details.detail : `Export failed with status ${response.status}`);
     }
 
     const blob = await response.blob();
@@ -40,6 +43,10 @@ export const downloadCode = async (code: string) => {
       filenameFromContentDisposition(response.headers.get("Content-Disposition"))
     );
   } catch (error) {
+    if (format === "react") {
+      toast.error(error instanceof Error ? error.message : "React project export failed");
+      return;
+    }
     console.warn("Falling back to downloading index.html", error);
     downloadBlob(
       new Blob([normalizeBabelCdn(code)], { type: "text/html" }),
