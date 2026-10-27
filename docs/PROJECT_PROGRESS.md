@@ -126,3 +126,12 @@ Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `do
 - PNG download buttons are visible beside the first and subsequent captures; actual downloaded-file inspection is not independently established.
 - **Verified:** capture selection and confirmation preview render on Mac. **Not verified:** Cancel click, actual provider submission, quality of multi-image generation, or Windows behavior. No paid model call is established by the screenshots.
 - **Next:** click Cancel and verify that no AI generation starts. Optionally complete exactly one paid Claude Test Mode generation with the user's express choice; inspect output, compare it with approved source, then save and export React app.
+
+## 2026-10-27 — First real multi-image React rebuild completed on Mac (user screenshots)
+
+- **Evidence:** three screenshots of the completed local editor preview for the organization-owned website using three previously captured screenshots. The left history shows generated-file/review and subsequent corrections, and there is no longer an active "Working" state.
+- **Verified visually:** an independently rendered React page has Arabic navigation, an RTL hero/brand area, a three-column features section, and a contact/consultation form layout.
+- **Issues visible:** main building hero photograph is missing/replaced by a plain dark background; logo is an approximation rather than the original; all three feature numbers show `01` rather than distinct ordered numerals. Form operation and remote delivery have not been tested.
+- **Quality:** successful functional proof of multi-image generation, not proof of pixel-perfect fidelity, backend functionality, accessibility, mobile responsiveness, or production readiness.
+- **Recommended immediate actions:** save V1 in Project Manager with portable JSON backup; separately test mobile; prioritize authorized logo/hero asset reuse, ordered numbering, RTL and form semantics; compare source/reference and generated result.
+- **Do not claim:** Windows testing completed, actual form submissions work, or that the screenshot proves a particular Claude API charge. No modifications to the live organization site were made.
