@@ -38,8 +38,7 @@ function UrlTab({
     screenshot: string;
     device: "desktop" | "mobile";
     viewport: { width: number; height: number };
-    design: { title: string; headings: string[]; colors: string[]; backgrounds: string[]; fonts: string[]; language?: string; direction?: string; bodyTextSample?: string; visibleElementCount?: number; linkCount?: number; imageCount?: number; documentHeight?: number; sections?: Array<{tag:string;text:string;x:number;y:number;width:number;height:number;fontSize:string}> };
-    assetCandidates?: Array<{ source: string; kind: string; alt: string; width: number; height: number }>;
+    design: { title: string; headings: string[]; colors: string[]; backgrounds: string[]; fonts: string[]; language?: string; direction?: string; bodyTextSample?: string; visibleElementCount?: number; linkCount?: number; imageCount?: number; documentHeight?: number; sections?: Array<{tag:string;text:string;x:number;y:number;width:number;height:number;fontSize:string}>; assetCandidates?: Array<{ source: string; kind: string; alt: string; width: number; height: number }> };
     warnings?: string[];
     capturedFullPage?: boolean;
     sectionsCaptured?: Array<{ y: number; image: string }>;
