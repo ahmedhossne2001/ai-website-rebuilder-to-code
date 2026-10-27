@@ -135,3 +135,10 @@ Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `do
 - **Quality:** successful functional proof of multi-image generation, not proof of pixel-perfect fidelity, backend functionality, accessibility, mobile responsiveness, or production readiness.
 - **Recommended immediate actions:** save V1 in Project Manager with portable JSON backup; separately test mobile; prioritize authorized logo/hero asset reuse, ordered numbering, RTL and form semantics; compare source/reference and generated result.
 - **Do not claim:** Windows testing completed, actual form submissions work, or that the screenshot proves a particular Claude API charge. No modifications to the live organization site were made.
+
+## 2026-10-27 — Large project save failure and IndexedDB mitigation
+
+- **Observed on user's Mac:** named Project Manager save for `Alhashmyah Website Rebuild V1` failed with `This project is too large for browser storage. Use Save JSON for a full backup.`. The old code rejected serialized JSON above 3,000,000 characters.
+- **Safety action:** first download **Backup current JSON** before navigating or rebuilding; verify downloaded file.
+- **Code change:** `frontend/src/lib/largeProjectStorage.ts` uses IndexedDB for new and updated named projects, preserving access to previous localStorage projects and the 30-million-character JSON import limit. `App.tsx` was updated for asynchronous saved project actions. Existing backup format unchanged.
+- **Status:** committed, **not yet tested on Mac/Windows**. Browser quota or blocked storage can still cause failure; JSON backup remains essential. See `docs/LARGE_PROJECT_STORAGE.md`.
