@@ -161,6 +161,32 @@ async def analyze_url(body: AnalyzeRequest):
                 imageCount: document.querySelectorAll('img').length,
                 sections: rects,
                 documentHeight: document.documentElement.scrollHeight,
+                // Metadata only: never fetch assets from the analyzer backend.
+                assetCandidates: [...document.querySelectorAll('img, picture source, header, section, div')]
+                  .slice(0, 500).flatMap((el) => {
+                    const sources = [];
+                    if (el.tagName === 'IMG' && el.getAttribute('src')) {
+                      sources.push({ source: el.currentSrc || el.src, kind: 'image', alt: el.alt || '', width: el.naturalWidth || el.width, height: el.naturalHeight || el.height });
+                    }
+                    if (el.tagName === 'SOURCE' && el.getAttribute('srcset')) {
+                      const first = (el.getAttribute('srcset') || '').split(',')[0].trim().split(/\\s+/)[0];
+                      if (first) sources.push({ source: new URL(first, document.baseURI).href, kind: 'picture', alt: '', width: 0, height: 0 });
+                    }
+                    const bg = getComputedStyle(el).backgroundImage;
+                    if (bg && bg !== 'none') {
+                      const m = bg.match(/^url\\(["']?(.*?)["']?\\)$/);
+                      if (m) sources.push({ source: new URL(m[1], document.baseURI).href, kind: 'background', alt: '', width: 0, height: 0 });
+                    }
+                    return sources;
+                  }).filter((item) => {
+                    try {
+                      const url = new URL(item.source);
+                      return url.protocol === 'https:' && url.hostname === location.hostname &&
+                        !url.username && !url.password && (url.port === '' || url.port === '443') &&
+                        !/[<>]/.test(item.source);
+                    } catch { return false; }
+                  }).filter((item, i, all) => all.findIndex((other) => other.source === item.source) === i)
+                    .slice(0, 24),
               };
             }""")
             warnings = []
