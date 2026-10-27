@@ -166,3 +166,10 @@ Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `do
 - **Fix:** moved the TypeScript field into the nested `design` declaration; commit `d6b8747` on `feature/hybrid-cross-platform-setup`.
 - **Status:** source code fix committed; **Docker build and Mac retest pending**. The generated site and its saved IndexedDB/JSON backup should remain unchanged.
 - **Next check:** pull/rebuild Docker; open URL analysis for the owned site and expand `Original website asset candidates` if image URLs are detected. If empty, report that no candidates were detected rather than implying failure of the entire analyzer.
+
+## 2026-10-27 — User validation: original site asset candidate discovery
+
+- **User screenshot evidence:** `New → URL → Analyze URL` for the owned `https://www.alhashmyahh.com` now displays **Original website asset candidates (22)** and preview tiles in the browser.
+- Visible references include alternate HAI/Arabic logo variants (top row) and the building exterior hero photograph labeled `background` (second row, first tile). Another background image of industrial equipment is visible. This **validates the asset candidate inventory UI on Mac**.
+- **Not yet verified:** each asset URL copied correctly, image downloaded locally, imported into saved React build, or preserved as bundled local assets. No claim that this automatically fixes the rebuilt UI.
+- **Next:** copy URLs for the exact authorized logo and exterior photo, securely acquire local copies and bundle them with the React project; fix numbered features and test mobile. Maintain existing JSON backups. Avoid additional Claude API calls until the asset pipeline and integration path are reviewed.
