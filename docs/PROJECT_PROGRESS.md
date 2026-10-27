@@ -117,3 +117,12 @@ Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `do
 - Reused existing `doCreate(imageUrls[], "image", prompt, assetExtraction)` multi-image path; images are sent top-to-bottom with guidance to reconstruct one responsive Arabic RTL page and avoid duplicated sticky headers. Each selected image potentially increases API charges. No model/provider spending cap is implied.
 - Code commits: `3c1f476`, `e219cf9`; details in `docs/MULTI_SECTION_GENERATION.md`.
 - **Pending:** frontend/Docker build, UI selection, cancellation, PNG download, and (only with user approval and available API credits) actual paid multi-image generation. Windows remains untested. No work on original public website.
+
+## 2026-10-27 — Mac user UI test passed: multi-section selection and paid confirmation
+
+- **Evidence:** two screenshots supplied by the user of the URL analyzer for `https://www.alhashmyahh.com`.
+- Selected **3 of 4** available screenshots: first viewport, section 2 (850px), section 3 (3400px). Section 4 was not selected.
+- **Review & Generate with AI** correctly opened a cost confirmation panel with previews of the **three selected references**, explicit API billing warning, and **Confirm & Generate** / **Cancel (no API call)** controls.
+- PNG download buttons are visible beside the first and subsequent captures; actual downloaded-file inspection is not independently established.
+- **Verified:** capture selection and confirmation preview render on Mac. **Not verified:** Cancel click, actual provider submission, quality of multi-image generation, or Windows behavior. No paid model call is established by the screenshots.
+- **Next:** click Cancel and verify that no AI generation starts. Optionally complete exactly one paid Claude Test Mode generation with the user's express choice; inspect output, compare it with approved source, then save and export React app.
