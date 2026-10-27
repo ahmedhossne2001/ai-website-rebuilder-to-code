@@ -173,3 +173,10 @@ Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `do
 - Visible references include alternate HAI/Arabic logo variants (top row) and the building exterior hero photograph labeled `background` (second row, first tile). Another background image of industrial equipment is visible. This **validates the asset candidate inventory UI on Mac**.
 - **Not yet verified:** each asset URL copied correctly, image downloaded locally, imported into saved React build, or preserved as bundled local assets. No claim that this automatically fixes the rebuilt UI.
 - **Next:** copy URLs for the exact authorized logo and exterior photo, securely acquire local copies and bundle them with the React project; fix numbered features and test mobile. Maintain existing JSON backups. Avoid additional Claude API calls until the asset pipeline and integration path are reviewed.
+
+## 2026-10-27 — Paid AI edit request failed; backend diagnosis pending
+
+- **User screenshot evidence:** a follow-up edit requesting the actual owned-site logo and hero image URLs returned a toast reading `Error generating code. Please contact support.`, while the prior reconstructed React page remains visible.
+- The screenshot alone does not establish whether the failure was API billing/authentication, Anthropic rate/size limits, WebSocket disconnection, or server-side application error; no new code revision was confirmed.
+- **Recommended safe triage:** do not spam Retry or reissue paid requests. Back up V1 and inspect `docker compose logs --tail=150 backend` for the failed request. Redact keys/tokens and personal data before sharing.
+- **Next:** identify the specific backend failure; prefer deterministic code/asset fixes for logo, hero, and numbering rather than paying the model to perform simple replacements. No production site changes.
