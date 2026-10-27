@@ -39,6 +39,7 @@ function UrlTab({
     device: "desktop" | "mobile";
     viewport: { width: number; height: number };
     design: { title: string; headings: string[]; colors: string[]; backgrounds: string[]; fonts: string[]; language?: string; direction?: string; bodyTextSample?: string; visibleElementCount?: number; linkCount?: number; imageCount?: number; documentHeight?: number; sections?: Array<{tag:string;text:string;x:number;y:number;width:number;height:number;fontSize:string}> };
+    assetCandidates?: Array<{ source: string; kind: string; alt: string; width: number; height: number }>;
     warnings?: string[];
     capturedFullPage?: boolean;
     sectionsCaptured?: Array<{ y: number; image: string }>;
@@ -305,6 +306,26 @@ function UrlTab({
                 ))}
               </div>
             </div>}
+            {!!analysis.design.assetCandidates?.length && <details className="rounded border p-2 text-xs">
+              <summary className="cursor-pointer font-semibold">Original website asset candidates ({analysis.design.assetCandidates.length})</summary>
+              <p className="my-2 text-gray-500">Same-origin public image URL references only. Preview availability depends on the website. No files are imported and no AI request is made.</p>
+              <div className="grid max-h-80 grid-cols-2 gap-2 overflow-auto sm:grid-cols-3">
+                {analysis.design.assetCandidates.map((asset, index) => (
+                  <div key={asset.source} className="min-w-0 rounded border p-2">
+                    <div className="flex h-24 items-center justify-center overflow-hidden bg-gray-100">
+                      <img src={asset.source} alt={asset.alt || `Asset candidate ${index + 1}`}
+                        className="h-full w-full object-contain" loading="lazy" referrerPolicy="no-referrer"
+                        onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                    </div>
+                    <p className="mt-1 truncate" title={asset.source}>{asset.kind} · {asset.alt || "no alt"}</p>
+                    <button type="button" className="mt-1 rounded border px-2 py-1"
+                      onClick={() => { void navigator.clipboard.writeText(asset.source).then(() => toast.success("Asset URL copied.")).catch(() => toast.error("Copy failed.")); }}>
+                      Copy asset URL
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </details>}
             <p className="text-xs"><b>Headings:</b> {analysis.design.headings.join(" · ") || "None found"}</p>
             <p className="text-xs"><b>Text colors:</b> {analysis.design.colors.join(", ") || "Not available"}</p>
             <p className="text-xs"><b>Backgrounds:</b> {analysis.design.backgrounds.join(", ") || "Not available"}</p>
