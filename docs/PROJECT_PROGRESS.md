@@ -158,3 +158,11 @@ Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `do
 - **Limits:** JavaScript disabled, restricted resources, CSS background pattern, assets served from other hosts, and lazy loading mean actual original assets might not appear. Candidate thumbnails are browser requests to the same public site; selection/copy is user-directed. URL strings alone are not embedded images. Do not suggest that asset discovery fixes V1 automatically.
 - **Verification:** code committed on `feature/hybrid-cross-platform-setup`, but Docker/frontend build and candidate preview on Mac are still **pending**.
 - **Next:** rebuild; Analyze URL for the owned site; expand asset candidate panel and identify hero/logo URLs, then improve image integration workflow. Test mobile preview and ensure contact form isn't misrepresented as functional.
+
+## 2026-10-27 — TypeScript type-check regression in asset inventory fixed
+
+- **User screenshot:** Vite TypeScript diagnostic in `frontend/src/components/unified-input/tabs/UrlTab.tsx` at lines 309–310: `Property 'assetCandidates' does not exist on type ...`.
+- **Confirmed root cause:** the new `assetCandidates` optional property was placed at the root of the URL analysis response type, while the UI reads `analysis.design.assetCandidates`. The backend correctly places the field inside `design`.
+- **Fix:** moved the TypeScript field into the nested `design` declaration; commit `d6b8747` on `feature/hybrid-cross-platform-setup`.
+- **Status:** source code fix committed; **Docker build and Mac retest pending**. The generated site and its saved IndexedDB/JSON backup should remain unchanged.
+- **Next check:** pull/rebuild Docker; open URL analysis for the owned site and expand `Original website asset candidates` if image URLs are detected. If empty, report that no candidates were detected rather than implying failure of the entire analyzer.
