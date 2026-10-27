@@ -326,6 +326,14 @@ function UrlTab({
               <p className="font-semibold">Confirm paid AI generation</p>
               <p className="mt-1">You selected {selectedCaptureIds.length} screenshot(s). They will be sent to your selected AI model. More images can use more tokens and increase provider charges. This action starts generation immediately; your ChatGPT/Claude subscription does not pay for API usage.</p>
               <p className="mt-1">Please confirm that your selected model/API key is configured and that you want to incur possible charges.</p>
+              <div className="mt-3 grid max-h-56 grid-cols-2 gap-2 overflow-auto sm:grid-cols-4">
+                {capturedImages().filter((image) => selectedCaptureIds.includes(image.id)).map((image) => (
+                  <figure key={image.id} className="rounded border border-amber-300 bg-white p-1">
+                    <img src={image.image} alt={image.label} className="h-24 w-full object-contain object-top" />
+                    <figcaption className="text-[10px] text-gray-600">{image.label}</figcaption>
+                  </figure>
+                ))}
+              </div>
               <div className="mt-3 flex gap-2">
                 <button type="button" onClick={confirmGeneration} className="rounded bg-violet-700 px-3 py-2 font-medium text-white">Confirm & Generate</button>
                 <button type="button" onClick={() => setGenerationConfirmOpen(false)} className="rounded border px-3 py-2">Cancel (no API call)</button>
