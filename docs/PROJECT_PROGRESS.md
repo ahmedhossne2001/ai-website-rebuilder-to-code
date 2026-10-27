@@ -142,3 +142,10 @@ Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `do
 - **Safety action:** first download **Backup current JSON** before navigating or rebuilding; verify downloaded file.
 - **Code change:** `frontend/src/lib/largeProjectStorage.ts` uses IndexedDB for new and updated named projects, preserving access to previous localStorage projects and the 30-million-character JSON import limit. `App.tsx` was updated for asynchronous saved project actions. Existing backup format unchanged.
 - **Status:** committed, **not yet tested on Mac/Windows**. Browser quota or blocked storage can still cause failure; JSON backup remains essential. See `docs/LARGE_PROJECT_STORAGE.md`.
+
+## 2026-10-27 — Mac IndexedDB large-project save passes UI check
+
+- **User screenshot evidence:** Project Manager lists `Alhashmyah Website Rebuild V1`, timestamped 2026-10-27 11:53:37 AM, **6366 KB**, alongside the pre-existing `My First AI Website` (5 KB).
+- This demonstrates that the named-project save no longer fails at the earlier 3,000,000-character localStorage guard for this project and that the legacy project remains listed.
+- **Still pending:** verify `Backup` exports a readable JSON file and `Open` restores generated code, images, and history after navigation/reload. Windows not tested.
+- **Next:** complete reopen/backup acceptance test, review mobile preview, then address original logo/hero image and feature numbering without losing the saved V1.
