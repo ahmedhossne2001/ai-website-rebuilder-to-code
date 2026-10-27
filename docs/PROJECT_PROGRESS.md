@@ -100,3 +100,12 @@ Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `do
 - **Commits:** `d3afe2b` backend, `8926e79` frontend; docs `docs/SECTIONAL_CAPTURE.md`.
 - **Limitations:** partial coverage rather than one stitched image; JS remains disabled, external resources restricted; optional paid generation still uses first screenshot only.
 - **Tests:** new code committed but rebuild and manual sectional screenshot test on Mac are **pending**; Windows remains untested. Do not claim production safety for arbitrary URLs.
+
+## 2026-10-27 — Mac user test passed: sectional capture of organization-owned site
+
+- **User evidence:** two screenshots of URL analysis for `https://www.alhashmyahh.com`, with **Full Page (bounded)** enabled and **Desktop** viewport.
+- **Observed:** the first viewport image rendered, plus **3 additional section captures** labeled approximately **850px, 3400px, and 5100px** scroll offsets. Screenshots include hero, services/content, interior forms/sections and footer areas.
+- **Warnings observed:** full-page limits (4500px height or 6MP) were exceeded, so the first viewport was retained and sections were captured separately rather than stitched. This is expected behavior.
+- **Confirmed:** UI gallery and bounded sectional-capture workflow functioned on Mac for this website; no paid AI generation was used during analysis.
+- **Remaining limitations:** sampling is not contiguous; sections may omit intermediate content or repeat sticky elements. The generation action still uses the **primary screenshot only**. JavaScript remains disabled; external resources remain constrained. Windows and production security are not verified.
+- **Next:** offer an explicit multi-section generation input with strong cost messaging and user consent; consider completeness/coverage indicators and a safe export of captured images before paying an AI provider. Keep original site read-only.
