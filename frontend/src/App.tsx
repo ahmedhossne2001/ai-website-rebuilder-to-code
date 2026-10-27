@@ -33,7 +33,7 @@ import { useEscapeToExitSelectMode } from "./components/select-and-edit/useEscap
 import Sidebar from "./components/sidebar/Sidebar";
 import IconStrip from "./components/sidebar/IconStrip";
 import ProjectManager from "./components/projects/ProjectManager";
-import { listLocalProjects, readLocalProject, saveLocalProject, renameLocalProject, deleteLocalProject } from "./lib/localProjects";
+import { listProjects, readProject, saveProjectLarge, renameProject, removeProject } from "./lib/largeProjectStorage";
 import type { ProjectRecord } from "./lib/localProjects";
 import { downloadProjectFile, parseSavedProject } from "./lib/projectBackup";
 import type { SavedProject } from "./lib/projectBackup";
@@ -48,10 +48,14 @@ import { createCommit } from "./components/commits/utils";
 function App() {
   const projectFileInputRef = useRef<HTMLInputElement>(null);
   const [isProjectManagerOpen, setIsProjectManagerOpen] = useState(false);
-  const [localProjects, setLocalProjects] = useState<ProjectRecord[]>(() => listLocalProjects());
+  const [localProjects, setLocalProjects] = useState<ProjectRecord[]>([]);
+  useEffect(() => { void listProjects().then(setLocalProjects).catch(() => {}); }, []);
   const [activeLocalProjectId, setActiveLocalProjectId] = useState<string | null>(null);
   const [activeLocalProjectName, setActiveLocalProjectName] = useState("My Website");
-  const refreshLocalProjects = () => setLocalProjects(listLocalProjects());
+  const refreshLocalProjects = async () => {
+    try { setLocalProjects(await listProjects()); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "Cannot load saved projects."); }
+  };
   const {
     // Inputs
     inputMode,
@@ -285,16 +289,16 @@ function App() {
     };
   };
 
-  const saveNamedProject = (name: string) => {
+  const saveNamedProject = async (name: string) => {
     if (appState !== AppState.CODE_READY) {
       toast.error("Finish generating before saving.");
       return;
     }
     try {
-      const record = saveLocalProject(currentProjectSnapshot(), name, activeLocalProjectId ?? undefined);
+      const record = await saveProjectLarge(currentProjectSnapshot(), name, activeLocalProjectId ?? undefined);
       setActiveLocalProjectId(record.id);
       setActiveLocalProjectName(record.name);
-      refreshLocalProjects();
+      await refreshLocalProjects();
       toast.success("Saved locally. Export a JSON backup for safekeeping.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save project.");
@@ -319,14 +323,14 @@ function App() {
     setMobilePane("preview");
   };
 
-  const openNamedProject = (id: string) => {
+  const openNamedProject = async (id: string) => {
     if (appState === AppState.CODING) {
       toast.error("Finish or cancel generation first.");
       return;
     }
     try {
-      const snapshot = readLocalProject(id);
-      const record = listLocalProjects().find((p) => p.id === id);
+      const snapshot = await readProject(id);
+      const record = (await listProjects()).find((p) => p.id === id);
       if (!window.confirm("Open " + (record?.name ?? "this project") + "? Unsaved changes will be lost.")) return;
       restoreSnapshot(snapshot);
       setActiveLocalProjectId(id);
@@ -940,23 +944,23 @@ function App() {
           onClose={() => setIsProjectManagerOpen(false)}
           onSave={saveNamedProject}
           onOpen={openNamedProject}
-          onRename={(id, name) => {
+          onRename={async (id, name) => {
             try {
-              renameLocalProject(id, name);
+              await renameProject(id, name);
               if (id === activeLocalProjectId) setActiveLocalProjectName(name.trim());
-              refreshLocalProjects();
+              await refreshLocalProjects();
             } catch (e) { toast.error(e instanceof Error ? e.message : "Rename failed."); }
           }}
-          onDelete={(id) => {
+          onDelete={async (id) => {
             try {
-              deleteLocalProject(id);
+              await removeProject(id);
               if (activeLocalProjectId === id) setActiveLocalProjectId(null);
-              refreshLocalProjects();
+              await refreshLocalProjects();
               toast.success("Saved project deleted from this browser.");
             } catch (e) { toast.error(e instanceof Error ? e.message : "Delete failed."); }
           }}
-          onBackup={(id) => {
-            try { downloadProjectFile(readLocalProject(id)); }
+          onBackup={async (id) => {
+            try { downloadProjectFile(await readProject(id)); }
             catch (e) { toast.error(e instanceof Error ? e.message : "Backup failed."); }
           }}
           onImportJson={() => {
