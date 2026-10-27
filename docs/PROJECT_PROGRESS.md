@@ -149,3 +149,12 @@ Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `do
 - This demonstrates that the named-project save no longer fails at the earlier 3,000,000-character localStorage guard for this project and that the legacy project remains listed.
 - **Still pending:** verify `Backup` exports a readable JSON file and `Open` restores generated code, images, and history after navigation/reload. Windows not tested.
 - **Next:** complete reopen/backup acceptance test, review mobile preview, then address original logo/hero image and feature numbering without losing the saved V1.
+
+## 2026-10-27 — Backup/reopen confirmed and public image candidate inventory added
+
+- **User confirmed:** successfully backed up and reopened the large `Alhashmyah Website Rebuild V1` saved project after the IndexedDB change. Mac save/backup/restore flow now **user-validated**. Exact JSON content inspection was not performed by the assistant. Windows remains untested.
+- **New implementation:** Chromium URL analyzer inventories up to 24 *same-origin HTTPS public* image sources, picture sources and CSS background-image references discovered in the DOM. This returns URL metadata only, not file bytes. Frontend URL results show **Original website asset candidates** with browser previews and a **Copy asset URL** action.
+- **Purpose:** make it easier to identify approved original hero and logo assets for the independently generated RTL site, instead of hallucinating branding. **No automatic changes to a saved React project and no paid AI requests** are initiated.
+- **Limits:** JavaScript disabled, restricted resources, CSS background pattern, assets served from other hosts, and lazy loading mean actual original assets might not appear. Candidate thumbnails are browser requests to the same public site; selection/copy is user-directed. URL strings alone are not embedded images. Do not suggest that asset discovery fixes V1 automatically.
+- **Verification:** code committed on `feature/hybrid-cross-platform-setup`, but Docker/frontend build and candidate preview on Mac are still **pending**.
+- **Next:** rebuild; Analyze URL for the owned site; expand asset candidate panel and identify hero/logo URLs, then improve image integration workflow. Test mobile preview and ensure contact form isn't misrepresented as functional.
