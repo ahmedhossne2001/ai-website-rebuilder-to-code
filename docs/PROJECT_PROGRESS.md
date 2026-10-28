@@ -188,3 +188,11 @@ Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `do
 - **Mitigation committed:** removed `eager_input_streaming: True` from tool schemas at `backend/agent/providers/anthropic/provider.py`, avoiding opt-in to partial eager tool JSON streaming which may exacerbate SDK accumulation failures. Commit `2b1a2b9`.
 - **Caveat:** This is a targeted mitigation, **not verified** to eliminate malformed JSON from Anthropic responses in all circumstances. Backend Docker rebuild and explicit no-cost smoke test still pending; do not automatically retry paid requests.
 - **Next:** safeguard the V1 JSON backup, rebuild backend, inspect logs; only with user approval attempt a single low-cost edit. If the exception recurs, investigate SDK version and streamed tool call encoding separately, while avoiding logging keys and entire prompts.
+
+## 2026-10-28 — Mac Docker rebuild succeeds after Anthropic stream mitigation
+
+- **User screenshot evidence:** `git pull` fast-forwarded and `docker compose up -d --build` completed 29/29 build steps, with both frontend and backend images built and both containers started/running.
+- `docker compose ps` reports frontend `Up` on port **5173** and backend `Up` on port **7001**.
+- **Confirmed:** development branch update, images built, containers are running on Mac.
+- **Not yet confirmed:** the Anthropic streaming JSON issue is resolved. There has been no new paid Claude generation test after disabling eager tool input streaming.
+- **Next:** reopen saved project and JSON backup; verify frontend and site rendering. Before another billed API call, prioritize deterministic editing/bundling of authorized original hero image and logo in exported React project, or perform a single explicitly authorized Claude test with careful cost monitoring.
