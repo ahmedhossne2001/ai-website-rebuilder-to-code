@@ -180,3 +180,11 @@ Related documents: `docs/QUICKSTART_MAC_WINDOWS.md`, `docs/REACT_EXPORT.md`, `do
 - The screenshot alone does not establish whether the failure was API billing/authentication, Anthropic rate/size limits, WebSocket disconnection, or server-side application error; no new code revision was confirmed.
 - **Recommended safe triage:** do not spam Retry or reissue paid requests. Back up V1 and inspect `docker compose logs --tail=150 backend` for the failed request. Redact keys/tokens and personal data before sharing.
 - **Next:** identify the specific backend failure; prefer deterministic code/asset fixes for logo, hero, and numbering rather than paying the model to perform simple replacements. No production site changes.
+
+## 2026-10-28 — Anthropic streaming JSON error diagnosed; eager tool-input streaming disabled
+
+- **User-provided Mac backend logs:** Claude Sonnet 4.6 Test Mode request reaches Anthropic streaming API, but `anthropic.lib.streaming.messages.accumulate_event` raises `ValueError: control character (\\u0000–\\u001F) found while parsing a string at line 4 column 0`. Stack trace originates at `/app/agent/providers/anthropic/provider.py:401` while iterating streaming events. No successful edit was returned.
+- **Confirmed:** Anthropic API key is selected from environment and WebSocket accepted request; there is no evidence of missing key. Reported `[TOKEN USAGE] input=0 output=0` reflects failed internal accounting and is **not** a billing guarantee.
+- **Mitigation committed:** removed `eager_input_streaming: True` from tool schemas at `backend/agent/providers/anthropic/provider.py`, avoiding opt-in to partial eager tool JSON streaming which may exacerbate SDK accumulation failures. Commit `2b1a2b9`.
+- **Caveat:** This is a targeted mitigation, **not verified** to eliminate malformed JSON from Anthropic responses in all circumstances. Backend Docker rebuild and explicit no-cost smoke test still pending; do not automatically retry paid requests.
+- **Next:** safeguard the V1 JSON backup, rebuild backend, inspect logs; only with user approval attempt a single low-cost edit. If the exception recurs, investigate SDK version and streamed tool call encoding separately, while avoiding logging keys and entire prompts.
