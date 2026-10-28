@@ -202,7 +202,9 @@ def serialize_anthropic_tools(
         {
             "name": tool.name,
             "description": tool.description,
-            "eager_input_streaming": True,
+            # Do not opt into eager tool-input streaming: malformed control chars
+            # in partial tool JSON can crash the SDK message accumulator.
+            # Let the provider use the regular tool-input streaming path.
             "input_schema": copy.deepcopy(tool.parameters),
         }
         for tool in tools
