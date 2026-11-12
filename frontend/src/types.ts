@@ -18,6 +18,8 @@ export interface Settings {
   replicateApiKey: string | null;
   screenshotOneApiKey: string | null;
   isImageGenerationEnabled: boolean;
+  testMode?: boolean;
+  testModel?: "openai" | "anthropic" | "gemini";
   editorTheme: EditorTheme;
   generatedCodeConfig: Stack;
   codeGenerationModel: CodeGenerationModel;

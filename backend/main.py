@@ -10,6 +10,7 @@ from config import IS_DEBUG_ENABLED
 from routes import (
     capabilities,
     screenshot,
+    url_analyzer,
     generate_code,
     home,
     evals,
@@ -51,6 +52,7 @@ app.add_middleware(
 # Add routes
 app.include_router(generate_code.router)
 app.include_router(screenshot.router)
+app.include_router(url_analyzer.router)
 app.include_router(home.router)
 app.include_router(capabilities.router)
 app.include_router(evals.router)

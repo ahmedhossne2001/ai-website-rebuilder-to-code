@@ -12,11 +12,12 @@ from zipfile import ZIP_DEFLATED, ZipFile
 import httpx
 from bs4 import BeautifulSoup
 from bs4.element import Tag
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel
 
 from babel_cdn import normalize_babel_cdn
+from routes.react_project_export import make_react_project, UnsupportedReactExport
 
 router = APIRouter()
 
@@ -62,6 +63,7 @@ MAX_REDIRECTS = 5
 class ExportRequest(BaseModel):
     code: str
     baseUrl: str | None = None
+    format: str = "html"
 
 
 @dataclass(frozen=True)
@@ -451,6 +453,8 @@ def create_project_zip(index_html: str, assets: Iterable[ExportedAsset]) -> byte
 
 @router.post("/api/export")
 async def export_code(request: ExportRequest) -> Response:
+    if request.format not in ("html", "react"):
+        raise HTTPException(status_code=422, detail="Unsupported export format")
     soup = BeautifulSoup(normalize_babel_cdn(request.code), "html.parser")
     candidates = collect_asset_candidates(soup)
 
@@ -476,7 +480,13 @@ async def export_code(request: ExportRequest) -> Response:
         rewrite_html_assets(soup, asset_path_by_url)
 
     index_html = rewrite_raw_asset_urls(str(soup), asset_path_by_url)
-    zip_content = create_project_zip(index_html, assets)
+    if request.format == "react":
+        try:
+            zip_content = make_react_project(index_html, assets)
+        except UnsupportedReactExport as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+    else:
+        zip_content = create_project_zip(index_html, assets)
     print(
         "Export complete: "
         f"candidates={len(candidates)} assets={len(assets)} "
@@ -486,6 +496,6 @@ async def export_code(request: ExportRequest) -> Response:
         content=zip_content,
         media_type="application/zip",
         headers={
-            "Content-Disposition": 'attachment; filename="screenshot-to-code-export.zip"'
+            "Content-Disposition": ('attachment; filename="ai-website-react-project.zip"' if request.format == "react" else 'attachment; filename="screenshot-to-code-export.zip"')
         },
     )
